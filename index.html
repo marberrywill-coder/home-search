@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Home Search Assistant</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --sidebar:#16181d; --sidebar-hover:#23262e; --sidebar-active:#2d3140;
+    --accent:#4f46e5; --accent-dark:#4338ca; --accent-light:#eef2ff;
+    --bg:#f4f5f7; --card:#ffffff; --text:#1f2430; --muted:#6b7280;
+    --border:#e6e8ec; --danger:#dc2626; --ok:#16a34a;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .app{display:flex;min-height:100vh}
+
+  /* ---- Sidebar ---- */
+  .sidebar{width:248px;background:var(--sidebar);color:#cdd1da;display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;flex-shrink:0}
+  .brand{padding:22px 20px 18px;border-bottom:1px solid #2a2d36}
+  .brand h1{font-size:17px;color:#fff;font-weight:700;letter-spacing:.2px}
+  .brand p{font-size:11.5px;color:#7c818e;margin-top:3px}
+  .nav{padding:14px 12px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;
+    color:#cdd1da;font-size:13.5px;font-weight:500;padding:10px 12px;border-radius:8px;
+    cursor:pointer;text-align:left;margin-bottom:3px;transition:background .12s}
+  .nav-item:hover{background:var(--sidebar-hover)}
+  .nav-item.active{background:var(--sidebar-active);color:#fff}
+  .nav-item .ic{font-size:15px;width:18px;text-align:center}
+  .count{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;font-weight:700;
+    padding:1px 7px;border-radius:10px}
+  .count:empty{display:none}
+  .side-foot{padding:14px 12px;border-top:1px solid #2a2d36}
+  .anchor-box{font-size:11px;color:#7c818e;padding:8px 12px;line-height:1.45}
+  .anchor-box b{color:#aab0bd;display:block;text-transform:uppercase;letter-spacing:.6px;font-size:9.5px;margin-bottom:2px}
+
+  /* ---- Main ---- */
+  .main{flex:1;padding:34px 40px 60px;max-width:1180px}
+  .section{display:none}
+  .section.active{display:block;animation:fade .18s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .sec-head{margin-bottom:22px}
+  .sec-head h1{font-size:23px;font-weight:700}
+  .sec-head .sub{color:var(--muted);font-size:13.5px;margin-top:5px;max-width:680px}
+
+  /* ---- Cards ---- */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:13px;
+    padding:22px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+
+  /* ---- Forms ---- */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px}
+  .field .opt{color:var(--muted);font-weight:400}
+  input,textarea,select{width:100%;font-family:inherit;font-size:13px;color:var(--text);
+    border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:#fff;outline:none}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+  textarea{resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  /* ---- Buttons ---- */
+  .btn{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;
+    font-weight:600;border:1px solid transparent;border-radius:8px;padding:9px 15px;
+    cursor:pointer;transition:.12s;white-space:nowrap}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover:not(:disabled){background:var(--accent-dark)}
+  .btn.outline{background:#fff;border-color:var(--border);color:var(--text)}
+  .btn.outline:hover{border-color:#c3c7ce}
+  .btn.ghost{background:var(--accent-light);color:var(--accent-dark)}
+  .btn.ghost:hover{background:#e2e7ff}
+  .btn.danger{background:#fff;border-color:#f0c2c2;color:var(--danger)}
+  .btn.danger:hover{background:#fef2f2}
+  .btn.tiny{font-size:12px;padding:6px 11px}
+  .btn.full{width:100%;justify-content:center}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+
+  .info-note{background:#f0f7ff;border:1px solid #d3e6fb;color:#1c4e80;font-size:12px;
+    padding:9px 12px;border-radius:8px;margin:6px 0 14px}
+  .error{background:#fef2f2;border:1px solid #f3c8c8;color:#9b1c1c;font-size:12.5px;
+    padding:10px 12px;border-radius:8px;margin-top:12px;white-space:pre-wrap;word-break:break-word}
+  .hint{font-size:11px;color:var(--muted);margin-top:5px}
+  .empty{text-align:center;color:var(--muted);font-size:14px;padding:46px 20px;
+    border:2px dashed var(--border);border-radius:13px;background:#fafbfc}
+  .muted-note{color:var(--muted);font-size:12.5px;font-style:italic;margin:8px 0}
+
+  /* ---- Analysis blocks ---- */
+  .result-card h2{font-size:16px;margin-bottom:12px}
+  .vibe{background:linear-gradient(135deg,#eef2ff,#faf5ff);border:1px solid #e0e3fb;
+    border-radius:10px;padding:13px 15px;font-size:13.5px;font-style:italic;color:#383e58;margin-bottom:14px}
+  .block-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    color:var(--muted);margin:14px 0 8px}
+  .xfactors{display:flex;flex-direction:column;gap:8px}
+  .xrow{display:flex;align-items:flex-start;gap:9px}
+  .badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;
+    padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+  .badge.sm{font-size:10.5px;padding:3px 8px;margin:1px 2px 1px 0}
+  .xreason{font-size:12.5px;color:#4b5160;padding-top:3px}
+  .criteria{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .crit{background:#fafbfc;border:1px solid var(--border);border-radius:9px;padding:9px 11px}
+  .crit-k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .crit-v{font-size:12.5px;margin-top:3px}
+  .analyzed-at{font-size:10.5px;color:var(--muted);margin-top:14px}
+
+  /* ---- Homes ---- */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .toolbar .spacer{flex:1}
+  .tb-label{font-size:12px;color:var(--muted);font-weight:600}
+  .toolbar select{width:auto}
+  .homes-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px}
+  .home-card{margin-bottom:0;display:flex;flex-direction:column}
+  .home-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:6px}
+  .home-addr{font-size:15px;font-weight:700;line-height:1.3}
+  .home-link{font-size:12px;color:var(--accent);text-decoration:none}
+  .home-link:hover{text-decoration:underline}
+  .price-tag{background:#ecfdf3;color:#067647;border:1px solid #c4ecd3;font-size:13px;
+    font-weight:700;padding:4px 11px;border-radius:8px;white-space:nowrap}
+  .home-notes{font-size:12px;color:#4b5160;background:#fafbfc;border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;margin-top:12px}
+  .card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:13px;
+    border-top:1px solid var(--border)}
+
+  .table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:13px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th{background:#fafbfc;text-align:left;font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--border)}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .t-addr{font-weight:600;min-width:150px}
+  .t-c{text-align:center;font-size:14px}
+
+  /* ---- Neighborhoods / Search ---- */
+  .nb-grid,.search-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:16px}
+  .nb-card,.search-card{margin-bottom:0}
+  .nb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .nb-top h3{font-size:15px}
+  .nb-mins{font-size:11px;font-weight:700;color:var(--accent-dark);background:var(--accent-light);
+    padding:2px 8px;border-radius:12px;white-space:nowrap}
+  .nb-zips{font-size:11.5px;color:var(--muted);margin:7px 0 3px;font-weight:600}
+  .nb-note{font-size:12.5px;color:#4b5160;margin-bottom:13px}
+  .search-card{text-align:center}
+  .search-icon{font-size:30px;margin-bottom:6px}
+  .search-card h3{font-size:14.5px;margin-bottom:5px}
+  .search-card p{font-size:12px;color:var(--muted);margin-bottom:14px;min-height:32px}
+
+  /* ---- Drawer & Modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(15,18,25,.5);display:none;z-index:40}
+  .overlay.show{display:block}
+  #modalOverlay.show{display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:92vw;background:#fff;
+    z-index:50;transform:translateX(100%);transition:transform .24s ease;
+    display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{display:flex;justify-content:space-between;align-items:center;
+    padding:18px 20px;border-bottom:1px solid var(--border)}
+  .drawer-head h2{font-size:16px}
+  .x{background:none;border:0;font-size:17px;cursor:pointer;color:var(--muted);line-height:1}
+  .drawer-body{padding:20px;overflow-y:auto}
+  .key-row{display:flex;gap:7px}
+  .key-row input{flex:1}
+  .saved-msg{color:var(--ok);font-size:12.5px;font-weight:600;margin-top:10px;text-align:center}
+  .modal{background:#fff;border-radius:14px;width:560px;max-width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,.3);z-index:51}
+  .modal-body{padding:20px;max-height:62vh;overflow-y:auto}
+  .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:15px 20px;
+    border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>🏡 Home Search Assistant</h1>
+      <p>X-factor hunting near Sandy Springs</p>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-sec="analyzer" onclick="showSection('analyzer')"><span class="ic">⭐</span> X-Factor Analyzer</button>
+      <button class="nav-item" data-sec="homes" onclick="showSection('homes')"><span class="ic">🏠</span> Saved Homes <span class="count" id="homesCount"></span></button>
+      <button class="nav-item" data-sec="neighborhoods" onclick="showSection('neighborhoods')"><span class="ic">📍</span> Neighborhoods</button>
+      <button class="nav-item" data-sec="search" onclick="showSection('search')"><span class="ic">🔎</span> Quick Search</button>
+    </nav>
+    <div class="side-foot">
+      <button class="nav-item" onclick="openDrawer()"><span class="ic">⚙️</span> Settings</button>
+      <div class="anchor-box"><b>Anchor address</b><span id="sbAnchor"></span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- ANALYZER -->
+    <section id="sec-analyzer" class="section active">
+      <div class="sec-head">
+        <h1>⭐ AI X-Factor Analyzer</h1>
+        <p class="sub">Paste a listing's details and let Gemini hunt for standout features — creeks, pools, workshops, big lots, sunrooms and more. It scores your baseline criteria too.</p>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Listing URL <span class="opt">(Zillow / Redfin)</span></label>
+          <input id="an_url" type="url" placeholder="https://www.zillow.com/homedetails/..."/>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Address</label><input id="an_address" placeholder="123 Creek View Dr, Marietta, GA"/></div>
+          <div class="field"><label>Price</label><input id="an_price" placeholder="$675,000"/></div>
+        </div>
+        <div class="field">
+          <label>Listing description text <span class="opt">(paste the full description from the listing)</span></label>
+          <textarea id="an_desc" rows="5" placeholder="Paste the property description here so the AI has something to read..."></textarea>
+        </div>
+        <div class="field">
+          <label>Image URLs <span class="opt">(one per line — up to 10, direct image links work best)</span></label>
+          <textarea id="an_images" rows="3" placeholder="https://photos.zillowstatic.com/fp/....jpg"></textarea>
+        </div>
+        <div class="field">
+          <label>Notes <span class="opt">(optional)</span></label>
+          <input id="an_notes" placeholder="e.g. corner lot, walk to the park"/>
+        </div>
+        <div class="info-note">ℹ️ The AI can't open the listing URL itself — paste the description text and any photo URLs so it has real content to analyze. Images load best from direct CDN links; some may be blocked by CORS and will be skipped silently.</div>
+        <div class="actions">
+          <button class="btn primary" id="anAnalyzeBtn" onclick="runAnalyzer()">✨ Analyze with AI</button>
+          <button class="btn ghost" id="anSaveBtn" style="display:none" onclick="saveAnalyzerToTracker()">＋ Save to Saved Homes</button>
+        </div>
+        <div id="anError" class="error" style="display:none"></div>
+      </div>
+      <div id="anResult"></div>
+    </section>
+
+    <!-- HOMES -->
+    <section id="sec-homes" class="section">
+      <div class="sec-head">
+        <h1>🏠 Saved Homes</h1>
+        <p class="sub">Track candidates, run X-factor analysis on each, and compare them side by side.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" onclick="openModal()">＋ Add Home</button>
+        <div class="spacer"></div>
+        <span class="tb-label">Sort</span>
+        <select id="sortSel" onchange="setSort(this.value)">
+          <option value="price_asc">Price: low → high</option>
+          <option value="price_desc">Price: high → low</option>
+          <option value="xfactors">Most X-factors</option>
+        </select>
+        <button class="btn outline" id="viewToggle" onclick="toggleView()">▦ Table view</button>
+      </div>
+      <div id="homesCards" class="homes-cards"></div>
+      <div id="homesTable" style="display:none"></div>
+    </section>
+
+    <!-- NEIGHBORHOODS -->
+    <section id="sec-neighborhoods" class="section">
+      <div class="sec-head">
+        <h1>📍 Neighborhood Reference</h1>
+        <p class="sub">Areas within roughly 35 minutes of <b id="nbAnchor"></b> at a no-traffic baseline. Click any card for live driving directions from the anchor.</p>
+      </div>
+      <div id="nbList" class="nb-grid"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="sec-search" class="section">
+      <div class="sec-head">
+        <h1>🔎 Quick-Launch Searches</h1>
+        <p class="sub">Pre-filtered searches — Atlanta area, houses under $700k. Each opens in a new tab as a starting point you can refine.</p>
+      </div>
+      <div id="searchList" class="search-grid"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Settings drawer -->
+<div id="drawerOverlay" class="overlay" onclick="closeDrawer()"></div>
+<aside id="drawer" class="drawer">
+  <div class="drawer-head"><h2>⚙️ Settings</h2><button class="x" onclick="closeDrawer()">✕</button></div>
+  <div class="drawer-body">
+    <div class="field">
+      <label>Gemini API Key <span style="font-weight:400;color:var(--ok)">— free, no credit card</span></label>
+      <div class="key-row">
+        <input id="set_key" type="password" placeholder="AIzaSy..."/>
+        <button class="btn outline tiny" type="button" onclick="toggleKey()">👁</button>
+      </div>
+      <div class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> — sign in with Google, click "Create API key". No credit card needed. Stored only in this browser's localStorage.</div>
+    </div>
+    <div class="field">
+      <label>Model</label>
+      <input id="set_model" placeholder="gemini-1.5-flash"/>
+      <div class="hint">Default: <b>gemini-1.5-flash</b> (free tier, fast, great for this). Also try <b>gemini-2.0-flash</b> or <b>gemini-1.5-pro</b> for deeper analysis.</div>
+    </div>
+    <div class="field">
+      <label>Anchor Address</label>
+      <input id="set_anchor"/>
+      <div class="hint">Origin point for neighborhood driving-distance directions.</div>
+    </div>
+    <button class="btn primary full" onclick="saveSettings()">Save Settings</button>
+    <div id="setSaved" class="saved-msg" style="display:none">✓ Settings saved</div>
+  </div>
+</aside>
+
+<!-- Add/Edit modal -->
+<div id="modalOverlay" class="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="drawer-head"><h2 id="modalTitle">Add a Home</h2><button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Address</label><input id="md_address" placeholder="123 Creek View Dr, Marietta, GA"/></div>
+      <div class="row2">
+        <div class="field"><label>Price</label><input id="md_price" placeholder="$675,000"/></div>
+        <div class="field"><label>Listing URL</label><input id="md_url" placeholder="https://www.zillow.com/..."/></div>
+      </div>
+      <div class="field"><label>Notes</label><input id="md_notes" placeholder="Anything worth remembering"/></div>
+      <div class="field">
+        <label>Listing description <span class="opt">(optional — needed for AI analysis)</span></label>
+        <textarea id="md_desc" rows="4" placeholder="Paste the listing description for X-factor analysis..."></textarea>
+      </div>
+      <div class="field">
+        <label>Image URLs <span class="opt">(optional — one per line, for AI analysis)</span></label>
+        <textarea id="md_images" rows="2" placeholder="https://photos.zillowstatic.com/...jpg"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn outline" onclick="saveModal(false)">Save</button>
+      <button class="btn primary" onclick="saveModal(true)">Save &amp; Analyze</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ State ============ */
+var DEFAULT_ANCHOR = '5163 Roswell Rd, Atlanta, GA 30342';
+var state = {
+  apiKey:'', model:'gemini-1.5-flash', anchor:DEFAULT_ANCHOR,
+  homes:[], sortBy:'price_asc', viewMode:'cards',
+  modalEditId:null, lastAnalysis:null
+};
+
+var NEIGHBORHOODS = [
+  {name:'Sandy Springs', zips:'30328, 30342, 30350', mins:'5-15 min', note:'Surrounds the anchor address — the closest option.'},
+  {name:'Dunwoody', zips:'30338, 30346', mins:'10-20 min', note:'Strong schools, Brook Run Park, MARTA access.'},
+  {name:'Brookhaven', zips:'30319', mins:'10-20 min', note:'Walkable pockets, Murphey Candler Park, lively dining.'},
+  {name:'Chamblee', zips:'30341', mins:'15-25 min', note:'Up-and-coming, good value, MARTA station.'},
+  {name:'Roswell', zips:'30075, 30076', mins:'15-25 min', note:'Historic district and Chattahoochee River trails.'},
+  {name:'Vinings', zips:'30339', mins:'15-25 min', note:'Upscale, riverside, easy I-285 access.'},
+  {name:'Smyrna', zips:'30080, 30082', mins:'20-30 min', note:'Market Village, newer builds, solid value.'},
+  {name:'East Cobb', zips:'30062, 30068', mins:'20-30 min', note:'Top-rated schools and larger, leafier lots.'},
+  {name:'Marietta', zips:'30060, 30064, 30067', mins:'25-35 min', note:'Historic square — more land and house for the money.'}
+];
+
+var PALETTE = [['#fef3c7','#92400e'],['#dbeafe','#1e3a8a'],['#dcfce7','#14532d'],
+  ['#fce7f3','#9d174d'],['#e0e7ff','#3730a3'],['#ffedd5','#9a3412'],
+  ['#cffafe','#155e75'],['#f3e8ff','#6b21a8'],['#fee2e2','#991b1b'],['#d1fae5','#065f46']];
+
+/* ============ Helpers ============ */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function hashStr(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
+function badgeColor(label){var p=PALETTE[hashStr(String(label||''))%PALETTE.length];return{bg:p[0],fg:p[1]};}
+function fmtPrice(p){return p?'$'+Number(p).toLocaleString('en-US'):'—';}
+function parsePrice(s){var n=parseInt(String(s||'').replace(/[^0-9]/g,''),10);return isNaN(n)?null:n;}
+function prettyKey(k){return String(k).replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
+function el(id){return document.getElementById(id);}
+function setVal(id,v){el(id).value=v==null?'':v;}
+
+/* ============ Persistence ============ */
+function loadState(){
+  try{
+    state.apiKey = localStorage.getItem('hsa_apiKey')||'';
+    state.model  = localStorage.getItem('hsa_model')||'gemini-1.5-flash';
+    state.anchor = localStorage.getItem('hsa_anchor')||DEFAULT_ANCHOR;
+    var h = localStorage.getItem('hsa_homes');
+    state.homes = h?JSON.parse(h):[];
+  }catch(e){state.homes=[];}
+}
+function saveHomes(){
+  var clean = state.homes.map(function(h){
+    var o={};for(var k in h){if(h.hasOwnProperty(k)&&k.charAt(0)!=='_')o[k]=h[k];}return o;});
+  localStorage.setItem('hsa_homes', JSON.stringify(clean));
+}
+
+/* ============ Navigation ============ */
+function showSection(name){
+  var secs=document.querySelectorAll('.section');
+  for(var i=0;i<secs.length;i++) secs[i].classList.toggle('active', secs[i].id==='sec-'+name);
+  var navs=document.querySelectorAll('.nav-item[data-sec]');
+  for(var j=0;j<navs.length;j++) navs[j].classList.toggle('active', navs[j].getAttribute('data-sec')===name);
+}
+
+/* ============ Settings drawer ============ */
+function openDrawer(){
+  setVal('set_key',state.apiKey); setVal('set_model',state.model); setVal('set_anchor',state.anchor);
+  el('drawer').classList.add('open'); el('drawerOverlay').classList.add('show');
+  el('setSaved').style.display='none';
+}
+function closeDrawer(){el('drawer').classList.remove('open');el('drawerOverlay').classList.remove('show');}
+function toggleKey(){var i=el('set_key');i.type = i.type==='password'?'text':'password';}
+function saveSettings(){
+  state.apiKey = el('set_key').value.trim();
+  state.model  = el('set_model').value.trim()||'gemini-1.5-flash';
+  state.anchor = el('set_anchor').value.trim()||DEFAULT_ANCHOR;
+  localStorage.setItem('hsa_apiKey',state.apiKey);
+  localStorage.setItem('hsa_model',state.model);
+  localStorage.setItem('hsa_anchor',state.anchor);
+  el('setSaved').style.display='block';
+  el('sbAnchor').textContent=state.anchor;
+  renderNeighborhoods();
+}
+
+/* ============ Field reading ============ */
+function readFields(p){
+  return {
+    url: el(p+'_url').value.trim(),
+    address: el(p+'_address').value.trim(),
+    price: parsePrice(el(p+'_price').value),
+    notes: el(p+'_notes').value.trim(),
+    desc: el(p+'_desc').value.trim(),
+    images: el(p+'_images').value.split(/[\s,]+/).map(function(s){return s.trim();})
+              .filter(function(s){return /^https?:\/\//i.test(s);})
+  };
+}
+
+/* ============ Gemini API ============ */
+function buildPrompt(i, loadedImgCount){
+  var imgNote = (loadedImgCount > 0)
+    ? loadedImgCount+’ listing photo(s) are included with this message.\n\n’
+    : ((i.images&&i.images.length) ? i.images.length+’ image URL(s) were provided but could not be loaded (likely CORS restriction). Analyze based on description only.\n\n’ : ‘No photos were provided.\n\n’);
+  return ‘You are an expert real estate scout helping a buyer evaluate a home for sale near Atlanta, GA.\n\n’
++’THE BUYER\’S CRITERIA\n’
++’- Budget: under $700,000\n’
++’- Must-haves: a basement (finished or unfinished); a decent, usable backyard\n’
++’- Strong preferences: a pool; a creek or stream on the property\n\n’
++’YOUR JOB\n’
++’Analyze the listing using the description text and any photos provided. Identify "X-factors" — standout, unusual, or ‘
++’delightful features that make a home special. Examples: large or unique backyard, creek/stream/pond/water on the property, ‘
++’pool, sunroom, workshop, lake access, treehouse, covered outdoor living space, exceptional views, unique or notable ‘
++’architecture, unusually large lot, detached garage/studio/ADU, chef\’s kitchen, finished basement with extras, and similar.\n\n’
++’For every X-factor give a ONE-LINE reason citing evidence — quote the description or reference a photo (e.g. "Photo 4 shows...").\n’
++’Also score the baseline criteria (price vs budget, basement, backyard).\n\n’
++’LISTING URL (reference only — you cannot open it): ‘+(i.url||’(none provided)’)+’\n’
++’STATED PRICE: ‘+(i.price?’$’+Number(i.price).toLocaleString(‘en-US’):’(not provided)’)+’\n’
++’ADDRESS: ‘+(i.address||’(not provided)’)+’\n\n’
++’LISTING DESCRIPTION:\n"""\n’+(i.desc||’(no description provided)’)+’\n"""\n\n’
++imgNote
++’Return ONLY a valid JSON object with exactly this shape (no markdown, no prose):\n’
++’{\n’
++’  "x_factors": [\n’
++’    { "label": "Creek", "emoji": "\\uD83C\\uDF0A", "reason": "Description mentions a running creek along the rear property line" }\n’
++’  ],\n’
++’  "criteria_scores": {\n’
++’    "price": "assessment vs the $700k budget, or Unknown if not given",\n’
++’    "basement": "Yes / No / Unknown plus brief evidence",\n’
++’    "backyard": "size and quality estimate with brief evidence"\n’
++’  },\n’
++’  "vibe_summary": "2-3 sentences on what makes this house special — or why it falls flat"\n’
++’}\n\n’
++’If little information is available, return the JSON with an empty x_factors array and Unknown scores.’;
+}
+
+function extractJsonObject(text){
+  var t=text.trim();
+  var start=t.indexOf(‘{‘);
+  if(start===-1) throw new Error(‘No JSON object found in response’);
+  var depth=0,inStr=false,esc2=false;
+  for(var i=start;i<t.length;i++){
+    var c=t[i];
+    if(inStr){
+      if(esc2)esc2=false;
+      else if(c===’\\’)esc2=true;
+      else if(c===’"’)inStr=false;
+    }else{
+      if(c===’"’)inStr=true;
+      else if(c===’{‘)depth++;
+      else if(c===’}’){depth--;if(depth===0)return t.slice(start,i+1);}
+    }
+  }
+  throw new Error(‘Incomplete JSON in response’);
+}
+
+function parseAnalysis(text){
+  var raw;
+  try{ raw=JSON.parse(extractJsonObject(text)); }
+  catch(e){ throw new Error(‘Could not parse the AI response as JSON.\n\nRaw response:\n’+text.slice(0,300)); }
+  var xf=Array.isArray(raw.x_factors)?raw.x_factors.map(function(f){
+    return {label:String(f.label||’Feature’),emoji:String(f.emoji||’✨’),reason:String(f.reason||’’)};
+  }):[];
+  return {
+    x_factors:xf,
+    criteria_scores:(raw.criteria_scores&&typeof raw.criteria_scores===’object’)?raw.criteria_scores:{},
+    vibe_summary:String(raw.vibe_summary||’’),
+    analyzedAt:new Date().toISOString()
+  };
+}
+
+/* Fetch an image URL and return {mimeType, data} (base64). Returns null on any failure. */
+function fetchImageBase64(url){
+  return fetch(url,{mode:’cors’}).then(function(r){
+    if(!r.ok) return null;
+    var mime=(r.headers.get(‘content-type’)||’image/jpeg’).split(‘;’)[0].trim();
+    return r.blob().then(function(blob){
+      return new Promise(function(resolve){
+        var reader=new FileReader();
+        reader.onload=function(){ resolve({mimeType:mime,data:reader.result.split(‘,’)[1]}); };
+        reader.onerror=function(){ resolve(null); };
+        reader.readAsDataURL(blob);
+      });
+    });
+  }).catch(function(){ return null; });
+}
+
+function callAI(i){
+  if(!state.apiKey) return Promise.reject(new Error(‘No API key set. Open ⚙️ Settings and add your free Gemini API key from aistudio.google.com/apikey’));
+  var imageUrls=(i.images||[]).slice(0,10);
+  var model=state.model||’gemini-1.5-flash’;
+  var endpoint=’https://generativelanguage.googleapis.com/v1beta/models/’
+    +encodeURIComponent(model)+’:generateContent?key=’+encodeURIComponent(state.apiKey);
+
+  /* Try to fetch all images; skip any that fail (CORS etc.) */
+  var imgPromises=imageUrls.map(fetchImageBase64);
+  return Promise.all(imgPromises).then(function(results){
+    var loaded=results.filter(function(r){return r!==null;});
+    var parts=[];
+    for(var k=0;k<loaded.length;k++){
+      parts.push({inlineData:{mimeType:loaded[k].mimeType,data:loaded[k].data}});
+    }
+    parts.push({text:buildPrompt(i,loaded.length)});
+    var body={
+      contents:[{parts:parts}],
+      generationConfig:{responseMimeType:’application/json’,maxOutputTokens:1800}
+    };
+    return fetch(endpoint,{
+      method:’POST’,
+      headers:{‘content-type’:’application/json’},
+      body:JSON.stringify(body)
+    }).then(function(res){
+      if(!res.ok){
+        return res.text().then(function(txt){
+          var msg=txt;
+          try{var j=JSON.parse(txt);if(j.error&&j.error.message)msg=j.error.message;}catch(e){}
+          throw new Error(‘Gemini API ‘+res.status+’: ‘+msg);
+        });
+      }
+      return res.json();
+    },function(netErr){
+      throw new Error(‘Network error reaching Gemini API: ‘+netErr.message);
+    }).then(function(data){
+      var candidates=data.candidates||[];
+      if(!candidates.length) throw new Error(‘Gemini returned no candidates. Check your API key and model name in Settings.’);
+      var pts=(candidates[0].content||{}).parts||[];
+      var text=pts.map(function(p){return p.text||’’;}).join(‘’).trim();
+      if(!text) throw new Error(‘Gemini returned an empty response.’);
+      return parseAnalysis(text);
+    });
+  });
+}
+
+/* ============ Analyzer ============ */
+function runAnalyzer(){
+  var inputs=readFields('an');
+  var btn=el('anAnalyzeBtn');
+  showAnalyzerError('');
+  btn.disabled=true; btn.textContent='Analyzing…';
+  callAI(inputs).then(function(analysis){
+    state.lastAnalysis=analysis;
+    el('anResult').innerHTML='<div class="card result-card"><h2>Analysis Result</h2>'
+      +analysisHtml(analysis)
+      +'<div class="analyzed-at">Analyzed '+new Date(analysis.analyzedAt).toLocaleString()+'</div></div>';
+    el('anSaveBtn').style.display='';
+  }).catch(function(e){
+    showAnalyzerError(e.message);
+  }).then(function(){
+    btn.disabled=false; btn.textContent='✨ Analyze with AI';
+  });
+}
+function showAnalyzerError(msg){
+  var e=el('anError');
+  if(msg){e.textContent=msg;e.style.display='';}else{e.style.display='none';}
+}
+function saveAnalyzerToTracker(){
+  var i=readFields('an');
+  var home=newHome(i);
+  home.analysis=state.lastAnalysis||null;
+  state.homes.push(home);
+  saveHomes(); renderHomes();
+  el('anSaveBtn').style.display='none';
+  showSection('homes');
+}
+
+/* ============ Home objects ============ */
+function newHome(i){
+  return {
+    id:'h'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),
+    address:i.address||'', price:i.price||null, url:i.url||'', notes:i.notes||'',
+    desc:i.desc||'', images:i.images||[], analysis:null, createdAt:new Date().toISOString()
+  };
+}
+function xCount(h){return (h.analysis&&h.analysis.x_factors)?h.analysis.x_factors.length:0;}
+
+/* ============ Modal ============ */
+function openModal(id){
+  state.modalEditId=id||null;
+  var h=id?findHome(id):null;
+  el('modalTitle').textContent=h?'Edit Home':'Add a Home';
+  setVal('md_url',h?h.url:''); setVal('md_address',h?h.address:'');
+  setVal('md_price',h?(h.price||''):''); setVal('md_notes',h?h.notes:'');
+  setVal('md_desc',h?h.desc:''); setVal('md_images',h?(h.images||[]).join('\n'):'');
+  el('modalOverlay').classList.add('show');
+}
+function closeModal(){el('modalOverlay').classList.remove('show');state.modalEditId=null;}
+function findHome(id){
+  for(var i=0;i<state.homes.length;i++) if(state.homes[i].id===id) return state.homes[i];
+  return null;
+}
+function saveModal(analyzeAfter){
+  var i=readFields('md');
+  if(!i.address && !i.url){ alert('Add at least an address or a listing URL.'); return; }
+  var home;
+  if(state.modalEditId){
+    home=findHome(state.modalEditId);
+    home.address=i.address;home.price=i.price;home.url=i.url;
+    home.notes=i.notes;home.desc=i.desc;home.images=i.images;
+  }else{
+    home=newHome(i); state.homes.push(home);
+  }
+  saveHomes(); renderHomes(); closeModal();
+  if(analyzeAfter) analyzeHome(home.id);
+}
+
+/* ============ Home analysis ============ */
+function analyzeHome(id){
+  var home=findHome(id);
+  if(!home) return;
+  if(!home.desc && (!home.images||!home.images.length)){
+    if(!confirm('This home has no description or image URLs saved, so the analysis will be very limited.\n\nUse "Edit" to add a description and photo URLs first.\n\nRun anyway?')) return;
+  }
+  home._analyzing=true; renderHomes();
+  callAI({url:home.url,address:home.address,price:home.price,desc:home.desc,images:home.images})
+    .then(function(analysis){ home.analysis=analysis; })
+    .catch(function(e){ alert('Analysis failed:\n\n'+e.message); })
+    .then(function(){ home._analyzing=false; saveHomes(); renderHomes(); });
+}
+function deleteHome(id){
+  var h=findHome(id);
+  if(!h) return;
+  if(!confirm('Delete "'+(h.address||'this home')+'"?')) return;
+  state.homes=state.homes.filter(function(x){return x.id!==id;});
+  saveHomes(); renderHomes();
+}
+
+/* ============ Rendering: analysis ============ */
+function xfactorRowHtml(f){
+  var c=badgeColor(f.label);
+  return '<div class="xrow"><span class="badge" style="background:'+c.bg+';color:'+c.fg+'">'
+    +esc(f.emoji)+' '+esc(f.label)+'</span><span class="xreason">'+esc(f.reason)+'</span></div>';
+}
+function pillHtml(f){
+  var c=badgeColor(f.label);
+  return '<span class="badge sm" style="background:'+c.bg+';color:'+c.fg+'" title="'+esc(f.reason)+'">'
+    +esc(f.emoji)+' '+esc(f.label)+'</span>';
+}
+function analysisHtml(a){
+  if(!a) return '';
+  var h='';
+  if(a.vibe_summary) h+='<div class="vibe">“'+esc(a.vibe_summary)+'”</div>';
+  var n=(a.x_factors&&a.x_factors.length)?a.x_factors.length:0;
+  h+='<div class="block-label">✨ X-Factors'+(n?' ('+n+')':'')+'</div>';
+  if(n){
+    h+='<div class="xfactors">'+a.x_factors.map(xfactorRowHtml).join('')+'</div>';
+  }else{
+    h+='<div class="muted-note">No standout X-factors detected.</div>';
+  }
+  var cs=a.criteria_scores||{}; var keys=Object.keys(cs);
+  if(keys.length){
+    h+='<div class="block-label">📋 Baseline Criteria</div><div class="criteria">';
+    h+=keys.map(function(k){
+      return '<div class="crit"><div class="crit-k">'+esc(prettyKey(k))
+        +'</div><div class="crit-v">'+esc(String(cs[k]))+'</div></div>';
+    }).join('');
+    h+='</div>';
+  }
+  return h;
+}
+
+/* ============ Rendering: homes ============ */
+function sortedHomes(){
+  var hs=state.homes.slice();
+  var by=state.sortBy;
+  hs.sort(function(a,b){
+    if(by==='xfactors') return xCount(b)-xCount(a);
+    if(by==='price_desc') return (b.price||-1)-(a.price||-1);
+    return (a.price==null?Infinity:a.price)-(b.price==null?Infinity:b.price);
+  });
+  return hs;
+}
+function homeCardHtml(h){
+  var a=h.analysis;
+  return '<div class="card home-card">'
+    +'<div class="home-top"><div>'
+      +'<div class="home-addr">'+esc(h.address||'(no address)')+'</div>'
+      +(h.url?'<a class="home-link" href="'+esc(h.url)+'" target="_blank" rel="noopener">View listing ↗</a>':'')
+    +'</div><div class="price-tag">'+fmtPrice(h.price)+'</div></div>'
+    +(a?analysisHtml(a):'<div class="muted-note">Not analyzed yet.</div>')
+    +(h.notes?'<div class="home-notes">📝 '+esc(h.notes)+'</div>':'')
+    +'<div class="card-actions">'
+      +'<button class="btn tiny primary" '+(h._analyzing?'disabled':'')+' onclick="analyzeHome(\''+h.id+'\')">'
+        +(h._analyzing?'Analyzing…':(a?'↻ Re-analyze':'✨ Analyze'))+'</button>'
+      +'<button class="btn tiny outline" onclick="openModal(\''+h.id+'\')">Edit</button>'
+      +'<button class="btn tiny danger" onclick="deleteHome(\''+h.id+'\')">Delete</button>'
+    +'</div></div>';
+}
+function detect(h,words){
+  if(!h.analysis) return '—';
+  var x=h.analysis.x_factors||[];
+  for(var i=0;i<x.length;i++){
+    var blob=((x[i].label||'')+' '+(x[i].emoji||'')+' '+(x[i].reason||'')).toLowerCase();
+    for(var w=0;w<words.length;w++){ if(blob.indexOf(words[w])>-1) return '✅'; }
+  }
+  return '—';
+}
+function tableHtml(homes){
+  var rows=homes.map(function(h){
+    var a=h.analysis||{}; var cs=a.criteria_scores||{}; var xf=a.x_factors||[];
+    return '<tr>'
+      +'<td class="t-addr">'+esc(h.address||'—')+'</td>'
+      +'<td>'+fmtPrice(h.price)+'</td>'
+      +'<td>'+esc(cs.basement||'—')+'</td>'
+      +'<td>'+esc(cs.backyard||'—')+'</td>'
+      +'<td class="t-c">'+detect(h,['pool'])+'</td>'
+      +'<td class="t-c">'+detect(h,['creek','stream','brook'])+'</td>'
+      +'<td class="t-c">'+(xf.length||0)+'</td>'
+      +'<td>'+(xf.length?xf.map(pillHtml).join(' '):'—')+'</td>'
+    +'</tr>';
+  }).join('');
+  return '<div class="table-wrap"><table><thead><tr>'
+    +'<th>Address</th><th>Price</th><th>Basement</th><th>Backyard</th>'
+    +'<th>Pool</th><th>Creek</th><th>#X</th><th>X-Factors</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function renderHomes(){
+  el('homesCount').textContent = state.homes.length?state.homes.length:'';
+  var homes=sortedHomes();
+  var cards=el('homesCards'), table=el('homesTable');
+  if(!homes.length){
+    cards.innerHTML='<div class="empty">No saved homes yet.<br/>Add one with “＋ Add Home”, or analyze a listing and save it.</div>';
+    table.innerHTML='';
+    return;
+  }
+  cards.innerHTML=homes.map(homeCardHtml).join('');
+  table.innerHTML=tableHtml(homes);
+}
+function setSort(v){ state.sortBy=v; renderHomes(); }
+function toggleView(){
+  state.viewMode = state.viewMode==='cards'?'table':'cards';
+  var cards=el('homesCards'), table=el('homesTable'), btn=el('viewToggle');
+  if(state.viewMode==='table'){
+    cards.style.display='none'; table.style.display='block'; btn.textContent='▤ Card view';
+  }else{
+    cards.style.display='grid'; table.style.display='none'; btn.textContent='▦ Table view';
+  }
+}
+
+/* ============ Rendering: neighborhoods & search ============ */
+function renderNeighborhoods(){
+  el('nbAnchor').textContent=state.anchor;
+  el('nbList').innerHTML=NEIGHBORHOODS.map(function(n){
+    var link='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(state.anchor)
+      +'&destination='+encodeURIComponent(n.name+', GA');
+    return '<div class="card nb-card">'
+      +'<div class="nb-top"><h3>'+esc(n.name)+'</h3><span class="nb-mins">'+esc(n.mins)+'</span></div>'
+      +'<div class="nb-zips">ZIP: '+esc(n.zips)+'</div>'
+      +'<div class="nb-note">'+esc(n.note)+'</div>'
+      +'<a class="btn tiny outline" href="'+esc(link)+'" target="_blank" rel="noopener">🧭 Directions from anchor</a>'
+    +'</div>';
+  }).join('');
+}
+function renderSearch(){
+  var zState={usersSearchTerm:'Atlanta, GA',
+    filterState:{price:{max:700000},keywords:{value:'basement'}},isListVisible:true};
+  var zillow='https://www.zillow.com/homes/for_sale/?searchQueryState='+encodeURIComponent(JSON.stringify(zState));
+  var redfinBase='https://www.redfin.com/city/30772/GA/Atlanta/filter/';
+  var redfinBasement=redfinBase+'max-price=700k,property-type=house,remarks=basement';
+  var redfinPool=redfinBase+'max-price=700k,property-type=house,remarks=pool';
+  var items=[
+    {icon:'🟦',title:'Zillow — Atlanta, under $700k',desc:'Houses for sale matching the "basement" keyword.',url:zillow},
+    {icon:'🟥',title:'Redfin — Atlanta, under $700k',desc:'Houses for sale with "basement" in the listing remarks.',url:redfinBasement},
+    {icon:'🏊',title:'Redfin — Homes with a Pool',desc:'Atlanta houses under $700k mentioning "pool".',url:redfinPool}
+  ];
+  el('searchList').innerHTML=items.map(function(it){
+    return '<div class="card search-card">'
+      +'<div class="search-icon">'+it.icon+'</div>'
+      +'<h3>'+esc(it.title)+'</h3>'
+      +'<p>'+esc(it.desc)+'</p>'
+      +'<a class="btn primary" href="'+esc(it.url)+'" target="_blank" rel="noopener">Open search ↗</a>'
+    +'</div>';
+  }).join('');
+}
+
+/* ============ Init ============ */
+function init(){
+  loadState();
+  setVal('set_key',state.apiKey);
+  setVal('set_model',state.model);
+  setVal('set_anchor',state.anchor);
+  el('sbAnchor').textContent=state.anchor;
+  renderNeighborhoods();
+  renderSearch();
+  renderHomes();
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      if(el('modalOverlay').classList.contains('show')) closeModal();
+      else if(el('drawer').classList.contains('open')) closeDrawer();
+    }
+  });
+}
+init();
+</script>
+</body>
+</html>
