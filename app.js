@@ -162,19 +162,22 @@ function buildDiscoveryPrompt(){
     : '';
 
   return 'Use Google Search to find houses currently for sale near '+anchor+' in the Atlanta, GA metro area.\n\n'
-    +'BUYER CRITERIA — only return listings that meet ALL of these:\n'
-    +'- Type: single-family house (not condo, townhouse, or land)\n'
-    +'- Max price: $'+budget.toLocaleString('en-US')+'\n'
-    +'- Must mention: '+mustList.join(', ')+'\n\n'
-    +'PREFERRED FEATURES — prioritize listings that have any of these:\n'
+    +'HARD REQUIREMENTS — exclude anything failing these (no exceptions):\n'
+    +'- Single-family house ONLY — absolutely no condos, townhomes, land, vacant lots, or parcels\n'
+    +'- At least 2 bedrooms and at least 1.5 bathrooms (to confirm it is a livable house)\n'
+    +'- Active listing — not sold, not pending, not off-market\n'
+    +'- Max price: $'+budget.toLocaleString('en-US')+'\n\n'
+    +'KEY FEATURES TO IDENTIFY — score these in every listing but do NOT exclude a listing just\n'
+    +'because the exact words are absent. A home that clearly has the feature under a different\n'
+    +'name still counts (e.g. "terrace level", "lower level", "daylight" = basement):\n'
+    +'- '+keyList.join('\n- ')+'\n\n'
+    +'PREFERRED X-FACTOR FEATURES — rank higher and highlight listings that show evidence of:\n'
     +'- '+prefList.join('\n- ')+'\n'
     +skipSection
-    +'\n\nSearch Zillow, Redfin, and Realtor.com for currently active listings. '
-    +'Find 4–6 real, distinct properties. For each one extract all available details '
-    +'and run an X-factor analysis.\n\n'
-    +'X-factors are standout, unusual, or especially desirable features — e.g. creek/stream on property, '
-    +'pool, large wooded lot, covered outdoor living, workshop/studio, lake access, sunroom, '
-    +'finished basement with extras, exceptional views, ADU, chef\'s kitchen, or similar.\n\n'
+    +'\n\nSearch Zillow, Redfin, and Realtor.com. Find 4–6 real, distinct, active listings.\n\n'
+    +'X-factors: unusual or standout features worth noting — creek/stream on property, pool, large '
+    +'wooded lot, covered outdoor living, workshop/studio, lake access, sunroom, exceptional views, '
+    +'ADU/guest house, chef\'s kitchen, finished terrace level with extras, etc.\n\n'
     +'Return ONLY this JSON (no prose, no markdown):\n'
     +'{\n'
     +'  "listings": [\n'
@@ -190,14 +193,14 @@ function buildDiscoveryPrompt(){
     +'      ],\n'
     +'      "criteria_scores": {\n'
     +'        "price": "Yes — $649k under $'+budget.toLocaleString('en-US')+' budget",\n'
-    +'        "basement": "Yes — listing mentions full unfinished basement",\n'
-    +'        "backyard": "Yes — described as half-acre flat lot"\n'
+    +'        "basement": "Likely — listing describes a finished terrace level",\n'
+    +'        "backyard": "Yes — half-acre flat lot per listing"\n'
     +'      },\n'
     +'      "vibe_summary": "2-3 sentences on what makes this home special or why it falls flat"\n'
     +'    }\n'
     +'  ]\n'
     +'}\n\n'
-    +'Use null for any numeric field you cannot find. '
+    +'Use null for any numeric field you cannot determine. '
     +'Return {"listings":[]} if no qualifying listings are found.';
 }
 
@@ -287,7 +290,15 @@ function parseListings(text){
   try{
     var json=JSON.parse(extractJsonObject(text));
     var arr=Array.isArray(json.listings)?json.listings:(Array.isArray(json)?json:[]);
-    return arr.filter(function(l){return l&&(l.address||l.url);}).map(function(l){
+    return arr.filter(function(l){
+      if(!l||(l.address===''&&!l.url)) return false;
+      // Drop land parcels / vacant lots: anything with fewer than 2 beds or fewer than 1 bath
+      var b=typeof l.beds==='number'?l.beds:parseNum(l.beds);
+      var ba=typeof l.baths==='number'?l.baths:parseNum(l.baths);
+      if(b!==null&&b<2) return false;
+      if(ba!==null&&ba<1) return false;
+      return true;
+    }).map(function(l){
       return {
         address:  String(l.address||''),
         price:    typeof l.price==='number'?l.price:parsePrice(l.price),
@@ -546,8 +557,8 @@ function criteriaChipsHtml(cs){
   if(!cs||!Object.keys(cs).length)return'';
   var chips=Object.keys(cs).map(function(k){
     var val=String(cs[k]||''),lower=val.toLowerCase(),cls='chip-neutral';
-    if(/\byes\b/.test(lower)||/under budget|within budget|meets/.test(lower)) cls='chip-good';
-    else if(/\bno\b/.test(lower)||/unknown|not found|not mentioned|over budget/.test(lower)) cls='chip-bad';
+    if(/\byes\b/.test(lower)||/\blikely\b/.test(lower)||/under budget|within budget|meets/.test(lower)) cls='chip-good';
+    else if(/\bno\b/.test(lower)||/\bunlikely\b/.test(lower)||/unknown|not found|not mentioned|over budget/.test(lower)) cls='chip-bad';
     return'<span class="crit-chip '+cls+'">'+esc(prettyKey(k))+': '+esc(val.slice(0,60))+'</span>';
   });
   return'<div class="disc-criteria">'+chips.join('')+'</div>';
@@ -731,18 +742,40 @@ function renderNeighborhoods(){
   }).join('');
 }
 function renderSearch(){
-  var base='https://www.redfin.com/city/30772/GA/Atlanta/filter/';
-  var zState={usersSearchTerm:'Atlanta, GA',filterState:{price:{max:state.budget||700000},keywords:{value:'basement'}},isListVisible:true};
+  var budget = state.budget || 700000;
+  var budgetK = Math.round(budget/1000)+'k';
+
+  // ── Zillow ────────────────────────────────────────────────────────────────
+  // Use the /house_type/ path to restrict to single-family homes, then
+  // searchQueryState for location + price/bed/bath filters.
+  // The "keywords" field drives Zillow's full-text listing search.
+  function zlw(extraFilters){
+    var fs = Object.assign({price:{max:budget},beds:{min:2},baths:{min:2},isAllHomes:{value:true}}, extraFilters||{});
+    var qs = {usersSearchTerm:'Sandy Springs, GA 30342',filterState:fs,isListVisible:true};
+    return 'https://www.zillow.com/homes/for_sale/house_type/?searchQueryState='+encodeURIComponent(JSON.stringify(qs));
+  }
+
+  // ── Redfin ────────────────────────────────────────────────────────────────
+  // Redfin filter URL format: /city/{id}/GA/{City}/filter/{filters}
+  // Sandy Springs city id = 19063; Atlanta = 30772 (broader fallback)
+  // min-beds=2 + min-baths=2 prevents land/vacant-lot results.
+  var rfCore = 'property-type=house,max-price='+budgetK+',min-beds=2,min-baths=2';
+  function rf(extra){ return 'https://www.redfin.com/city/19063/GA/Sandy-Springs/filter/'+rfCore+(extra?','+extra:''); }
+  function rfAtl(extra){ return 'https://www.redfin.com/city/30772/GA/Atlanta/filter/'+rfCore+(extra?','+extra:''); }
+
   var items=[
-    {icon:'🟦',title:'Zillow — Atlanta, basement, under $'+((state.budget||700000)/1000).toFixed(0)+'k',
-     desc:'Houses matching the "basement" keyword.',
-     url:'https://www.zillow.com/homes/for_sale/?searchQueryState='+encodeURIComponent(JSON.stringify(zState))},
-    {icon:'🟥',title:'Redfin — Basement, under $700k',
-     desc:'Atlanta houses with "basement" in remarks.',url:base+'max-price=700k,property-type=house,remarks=basement'},
-    {icon:'🏊',title:'Redfin — Pool, under $700k',
-     desc:'Atlanta houses mentioning "pool".',url:base+'max-price=700k,property-type=house,remarks=pool'},
-    {icon:'💧',title:'Redfin — Creek/water, under $700k',
-     desc:'Atlanta houses mentioning "creek".',url:base+'max-price=700k,property-type=house,remarks=creek'}
+    {icon:'🏠',title:'Zillow — Sandy Springs houses, under $'+budgetK,
+     desc:'Single-family homes near the anchor, 2+ bed/bath, under budget. Refine with Zillow\'s keyword filter.',
+     url:zlw()},
+    {icon:'🔑',title:'Zillow — Sandy Springs, "basement" keyword',
+     desc:'Same search filtered to listings that mention "basement" in the description.',
+     url:zlw({keywords:{value:'basement'}})},
+    {icon:'🟥',title:'Redfin — Sandy Springs houses, under $'+budgetK,
+     desc:'Houses 2+bd/2+ba near the anchor. Use Redfin\'s keyword box to add basement, pool, or creek.',
+     url:rf()},
+    {icon:'🔴',title:'Redfin — Atlanta metro, pool homes',
+     desc:'Broader Atlanta area houses with a pool listed, 2+bd/2+ba.',
+     url:rfAtl('amenities=pool')}
   ];
   el('searchList').innerHTML=items.map(function(it){
     return'<div class="card search-card"><div class="search-icon">'+it.icon+'</div>'
