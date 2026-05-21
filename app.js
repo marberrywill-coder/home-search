@@ -1,7 +1,7 @@
 /* ============ State ============ */
 var DEFAULT_ANCHOR = '5163 Roswell Rd, Atlanta, GA 30342';
 var state = {
-  apiKey:'', model:'gemini-1.5-flash', anchor:DEFAULT_ANCHOR,
+  apiKey:'', model:'gemini-2.0-flash', anchor:DEFAULT_ANCHOR,
   homes:[], sortBy:'price_asc', viewMode:'cards',
   modalEditId:null, lastAnalysis:null
 };
@@ -37,7 +37,7 @@ function setVal(id,v){el(id).value=v==null?'':v;}
 function loadState(){
   try{
     state.apiKey = localStorage.getItem('hsa_apiKey')||'';
-    state.model  = localStorage.getItem('hsa_model')||'gemini-1.5-flash';
+    state.model  = localStorage.getItem('hsa_model')||'gemini-2.0-flash';
     state.anchor = localStorage.getItem('hsa_anchor')||DEFAULT_ANCHOR;
     var h = localStorage.getItem('hsa_homes');
     state.homes = h?JSON.parse(h):[];
@@ -67,7 +67,7 @@ function closeDrawer(){el('drawer').classList.remove('open');el('drawerOverlay')
 function toggleKey(){var i=el('set_key');i.type = i.type==='password'?'text':'password';}
 function saveSettings(){
   state.apiKey = el('set_key').value.trim();
-  state.model  = el('set_model').value.trim()||'gemini-1.5-flash';
+  state.model  = el('set_model').value.trim()||'gemini-2.0-flash';
   state.anchor = el('set_anchor').value.trim()||DEFAULT_ANCHOR;
   localStorage.setItem('hsa_apiKey',state.apiKey);
   localStorage.setItem('hsa_model',state.model);
@@ -180,7 +180,7 @@ function fetchImageBase64(url){
 function callAI(i){
   if(!state.apiKey) return Promise.reject(new Error('No API key set. Open Settings (bottom-left) and add your free Gemini API key from aistudio.google.com/apikey'));
   var imageUrls=(i.images||[]).slice(0,10);
-  var model=state.model||'gemini-1.5-flash';
+  var model=state.model||'gemini-2.0-flash';
   var endpoint='https://generativelanguage.googleapis.com/v1beta/models/'
     +encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(state.apiKey);
   var imgPromises=imageUrls.map(fetchImageBase64);
