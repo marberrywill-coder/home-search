@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -16,7 +16,7 @@
     background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
   .app{display:flex;min-height:100vh}
 
-  /* ---- Sidebar ---- */
+  /* Sidebar */
   .sidebar{width:248px;background:var(--sidebar);color:#cdd1da;display:flex;flex-direction:column;
     position:sticky;top:0;height:100vh;flex-shrink:0}
   .brand{padding:22px 20px 18px;border-bottom:1px solid #2a2d36}
@@ -36,20 +36,22 @@
   .anchor-box{font-size:11px;color:#7c818e;padding:8px 12px;line-height:1.45}
   .anchor-box b{color:#aab0bd;display:block;text-transform:uppercase;letter-spacing:.6px;font-size:9.5px;margin-bottom:2px}
 
-  /* ---- Main ---- */
+  /* Main */
   .main{flex:1;padding:34px 40px 60px;max-width:1180px}
   .section{display:none}
   .section.active{display:block;animation:fade .18s ease}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   .sec-head{margin-bottom:22px}
   .sec-head h1{font-size:23px;font-weight:700}
-  .sec-head .sub{color:var(--muted);font-size:13.5px;margin-top:5px;max-width:680px}
+  .sec-head .sub{color:var(--muted);font-size:13.5px;margin-top:5px;max-width:700px}
+  kbd{background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:1px 5px;
+    font-family:inherit;font-size:11.5px;color:#374151}
 
-  /* ---- Cards ---- */
+  /* Cards */
   .card{background:var(--card);border:1px solid var(--border);border-radius:13px;
     padding:22px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
 
-  /* ---- Forms ---- */
+  /* Forms */
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px}
   .field .opt{color:var(--muted);font-weight:400}
@@ -58,8 +60,9 @@
   input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
   textarea{resize:vertical}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 
-  /* ---- Buttons ---- */
+  /* Buttons */
   .btn{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;
     font-weight:600;border:1px solid transparent;border-radius:8px;padding:9px 15px;
     cursor:pointer;transition:.12s;white-space:nowrap}
@@ -76,6 +79,48 @@
   .btn.full{width:100%;justify-content:center}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 
+  /* Rating buttons */
+  .btn.pass{background:#fff0f0;border-color:#fad4d4;color:#dc2626;font-size:14px;padding:11px 22px;flex:1;justify-content:center}
+  .btn.pass:hover{background:#ffe4e4}
+  .btn.like{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;font-size:14px;padding:11px 22px;flex:1;justify-content:center}
+  .btn.like:hover{background:#dbeafe}
+  .btn.love{background:#fdf4ff;border-color:#e9d5ff;color:#7e22ce;font-size:14px;padding:11px 22px;flex:1;justify-content:center}
+  .btn.love:hover{background:#f3e8ff}
+  .disc-actions{display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+
+  /* Discover cards */
+  .disc-card{max-width:800px}
+  .disc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+  .disc-addr{font-size:16px;font-weight:700;line-height:1.3;flex:1}
+  .disc-specs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+  .spec-chip{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;
+    font-size:12px;font-weight:600;padding:4px 9px;color:#374151}
+  .disc-xf{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:10px 0 6px}
+  .disc-criteria{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .crit-chip{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px}
+  .chip-good{background:#dcfce7;color:#14532d;border:1px solid #bbf7d0}
+  .chip-bad{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+  .chip-neutral{background:#f3f4f6;color:#4b5563;border:1px solid #e5e7eb}
+
+  /* Loading */
+  .disc-loading{min-height:130px;display:flex;align-items:center;justify-content:center}
+  .disc-loading-inner{text-align:center}
+  .loading-msg{font-size:14px;font-weight:600;color:var(--muted);margin:12px 0 5px}
+  .loading-sub{font-size:12px;color:var(--muted)}
+  .loading-dots{display:inline-flex;gap:5px}
+  .loading-dots span{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    display:inline-block;animation:dot-bounce 1.2s infinite}
+  .loading-dots span:nth-child(2){animation-delay:.2s}
+  .loading-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dot-bounce{0%,80%,100%{transform:scale(.6);opacity:.35}40%{transform:scale(1);opacity:1}}
+
+  /* Status badges */
+  .status-love{background:#fdf4ff;color:#7e22ce;border:1px solid #e9d5ff;
+    font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px}
+  .status-like{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;
+    font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px}
+
+  /* Misc */
   .info-note{background:#f0f7ff;border:1px solid #d3e6fb;color:#1c4e80;font-size:12px;
     padding:9px 12px;border-radius:8px;margin:6px 0 14px}
   .error{background:#fef2f2;border:1px solid #f3c8c8;color:#9b1c1c;font-size:12.5px;
@@ -85,52 +130,41 @@
     border:2px dashed var(--border);border-radius:13px;background:#fafbfc}
   .muted-note{color:var(--muted);font-size:12.5px;font-style:italic;margin:8px 0}
 
-  /* ---- Analysis blocks ---- */
-  .result-card h2{font-size:16px;margin-bottom:12px}
+  /* Analysis blocks */
   .vibe{background:linear-gradient(135deg,#eef2ff,#faf5ff);border:1px solid #e0e3fb;
-    border-radius:10px;padding:13px 15px;font-size:13.5px;font-style:italic;color:#383e58;margin-bottom:14px}
+    border-radius:10px;padding:13px 15px;font-size:13.5px;font-style:italic;color:#383e58;margin-bottom:12px}
   .block-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
-    color:var(--muted);margin:14px 0 8px}
+    color:var(--muted);margin:14px 0 8px;display:block}
   .xfactors{display:flex;flex-direction:column;gap:8px}
   .xrow{display:flex;align-items:flex-start;gap:9px}
   .badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;
     padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
   .badge.sm{font-size:10.5px;padding:3px 8px;margin:1px 2px 1px 0}
   .xreason{font-size:12.5px;color:#4b5160;padding-top:3px}
-  .criteria{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+  .criteria{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:4px}
   .crit{background:#fafbfc;border:1px solid var(--border);border-radius:9px;padding:9px 11px}
   .crit-k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
   .crit-v{font-size:12.5px;margin-top:3px}
-  .analyzed-at{font-size:10.5px;color:var(--muted);margin-top:14px}
 
-  /* ---- Homes ---- */
+  /* Homes (saved) */
   .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .toolbar .spacer{flex:1}
   .tb-label{font-size:12px;color:var(--muted);font-weight:600}
   .toolbar select{width:auto}
   .homes-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px}
   .home-card{margin-bottom:0;display:flex;flex-direction:column}
-  .home-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:6px}
+  .home-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
   .home-addr{font-size:15px;font-weight:700;line-height:1.3}
   .home-link{font-size:12px;color:var(--accent);text-decoration:none}
   .home-link:hover{text-decoration:underline}
   .price-tag{background:#ecfdf3;color:#067647;border:1px solid #c4ecd3;font-size:13px;
-    font-weight:700;padding:4px 11px;border-radius:8px;white-space:nowrap}
+    font-weight:700;padding:4px 11px;border-radius:8px;white-space:nowrap;flex-shrink:0}
   .home-notes{font-size:12px;color:#4b5160;background:#fafbfc;border:1px solid var(--border);
-    border-radius:8px;padding:8px 10px;margin-top:12px}
+    border-radius:8px;padding:8px 10px;margin-top:10px}
   .card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:13px;
     border-top:1px solid var(--border)}
 
-  .table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:13px}
-  table{border-collapse:collapse;width:100%;font-size:12.5px}
-  th{background:#fafbfc;text-align:left;font-size:10.5px;text-transform:uppercase;
-    letter-spacing:.6px;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--border)}
-  td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top}
-  tr:last-child td{border-bottom:0}
-  .t-addr{font-weight:600;min-width:150px}
-  .t-c{text-align:center;font-size:14px}
-
-  /* ---- Neighborhoods / Search ---- */
+  /* Neighborhoods / Search */
   .nb-grid,.search-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:16px}
   .nb-card,.search-card{margin-bottom:0}
   .nb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -144,7 +178,7 @@
   .search-card h3{font-size:14.5px;margin-bottom:5px}
   .search-card p{font-size:12px;color:var(--muted);margin-bottom:14px;min-height:32px}
 
-  /* ---- Drawer & Modal ---- */
+  /* Drawer & Modal */
   .overlay{position:fixed;inset:0;background:rgba(15,18,25,.5);display:none;z-index:40}
   .overlay.show{display:block}
   #modalOverlay.show{display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto}
@@ -160,7 +194,7 @@
   .key-row{display:flex;gap:7px}
   .key-row input{flex:1}
   .saved-msg{color:var(--ok);font-size:12.5px;font-weight:600;margin-top:10px;text-align:center}
-  .modal{background:#fff;border-radius:14px;width:560px;max-width:100%;
+  .modal{background:#fff;border-radius:14px;width:540px;max-width:100%;
     box-shadow:0 20px 50px rgba(0,0,0,.3);z-index:51}
   .modal-body{padding:20px;max-height:62vh;overflow-y:auto}
   .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:15px 20px;
@@ -171,11 +205,12 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <h1>🏡 Home Search Assistant</h1>
+      <h1>🏡 Home Search</h1>
       <p>X-factor hunting near Sandy Springs</p>
     </div>
     <nav class="nav">
-      <button class="nav-item active" data-sec="analyzer"><span class="ic">⭐</span> X-Factor Analyzer</button>
+      <button class="nav-item active" data-sec="discover"><span class="ic">🔍</span> Discover <span class="count" id="discoverCount"></span></button>
+      <button class="nav-item" data-sec="add"><span class="ic">＋</span> Add Listing</button>
       <button class="nav-item" data-sec="homes"><span class="ic">🏠</span> Saved Homes <span class="count" id="homesCount"></span></button>
       <button class="nav-item" data-sec="neighborhoods"><span class="ic">📍</span> Neighborhoods</button>
       <button class="nav-item" data-sec="search"><span class="ic">🔎</span> Quick Search</button>
@@ -187,51 +222,47 @@
   </aside>
 
   <main class="main">
-    <!-- ANALYZER -->
-    <section id="sec-analyzer" class="section active">
+
+    <!-- DISCOVER -->
+    <section id="sec-discover" class="section active">
       <div class="sec-head">
-        <h1>⭐ AI X-Factor Analyzer</h1>
-        <p class="sub">Paste a listing's details and let Gemini hunt for standout features — creeks, pools, workshops, big lots, sunrooms and more. It scores your baseline criteria too.</p>
+        <h1>🔍 Discover</h1>
+        <p class="sub">AI-analyzed listings waiting for your verdict. Rate each one to save it or pass it up.</p>
       </div>
-      <div class="card">
-        <div class="field">
-          <label>Listing URL <span class="opt">(Zillow / Redfin)</span></label>
-          <input id="an_url" type="url" placeholder="https://www.zillow.com/homedetails/..."/>
-        </div>
-        <div class="row2">
-          <div class="field"><label>Address</label><input id="an_address" placeholder="123 Creek View Dr, Marietta, GA"/></div>
-          <div class="field"><label>Price</label><input id="an_price" placeholder="$675,000"/></div>
-        </div>
-        <div class="field">
-          <label>Listing description text <span class="opt">(paste the full description from the listing)</span></label>
-          <textarea id="an_desc" rows="5" placeholder="Paste the property description here so the AI has something to read..."></textarea>
-        </div>
-        <div class="field">
-          <label>Image URLs <span class="opt">(one per line — up to 10, direct image links work best)</span></label>
-          <textarea id="an_images" rows="3" placeholder="https://photos.zillowstatic.com/fp/....jpg"></textarea>
-        </div>
-        <div class="field">
-          <label>Notes <span class="opt">(optional)</span></label>
-          <input id="an_notes" placeholder="e.g. corner lot, walk to the park"/>
-        </div>
-        <div class="info-note">ℹ️ The AI can't open the listing URL itself — paste the description text and any photo URLs so it has real content to analyze. Images load best from direct CDN links; some may be blocked by CORS and will be skipped silently.</div>
-        <div class="actions">
-          <button class="btn primary" id="anAnalyzeBtn">✨ Analyze with AI</button>
-          <button class="btn ghost" id="anSaveBtn" style="display:none">＋ Save to Saved Homes</button>
-        </div>
-        <div id="anError" class="error" style="display:none"></div>
-      </div>
-      <div id="anResult"></div>
+      <div id="discoverList"></div>
     </section>
 
-    <!-- HOMES -->
+    <!-- ADD LISTING -->
+    <section id="sec-add" class="section">
+      <div class="sec-head">
+        <h1>＋ Add a Listing</h1>
+        <p class="sub">Open a Zillow or Redfin listing → press <kbd>Ctrl+A</kbd> (select all) → <kbd>Ctrl+C</kbd> (copy) → paste below. The AI auto-extracts address, price, beds, baths, sqft and runs an X-factor analysis.</p>
+      </div>
+      <div class="card" style="max-width:800px">
+        <div class="field">
+          <label>Listing URL <span class="opt">(optional — saved for easy reference)</span></label>
+          <input id="add_url" type="url" placeholder="https://www.zillow.com/homedetails/..."/>
+        </div>
+        <div class="field">
+          <label>Paste the full listing text</label>
+          <textarea id="add_rawText" rows="10" placeholder="Go to a Zillow or Redfin listing → Ctrl+A → Ctrl+C → click here → Ctrl+V&#10;&#10;The AI will extract the address, price, beds, baths, sqft and analyze for X-factors automatically. No need to copy anything separately."></textarea>
+          <div class="hint">Paste everything on the page — description, facts &amp; features, all of it. More text = better analysis.</div>
+        </div>
+        <div class="info-note">ℹ️ Your API key is stored only in this browser. Each analysis uses roughly 1,000–3,000 tokens — well within Gemini's free tier limits.</div>
+        <div class="actions">
+          <button class="btn primary" id="addAnalyzeBtn">✨ Analyze &amp; Add to Queue</button>
+        </div>
+        <div id="addError" class="error" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- SAVED HOMES -->
     <section id="sec-homes" class="section">
       <div class="sec-head">
         <h1>🏠 Saved Homes</h1>
-        <p class="sub">Track candidates, run X-factor analysis on each, and compare them side by side.</p>
+        <p class="sub">Homes you've liked or loved. Rate them in Discover to add them here.</p>
       </div>
       <div class="toolbar">
-        <button class="btn primary" id="addHomeBtn">＋ Add Home</button>
         <div class="spacer"></div>
         <span class="tb-label">Sort</span>
         <select id="sortSel">
@@ -239,17 +270,15 @@
           <option value="price_desc">Price: high → low</option>
           <option value="xfactors">Most X-factors</option>
         </select>
-        <button class="btn outline" id="viewToggle">▦ Table view</button>
       </div>
       <div id="homesCards" class="homes-cards"></div>
-      <div id="homesTable" style="display:none"></div>
     </section>
 
     <!-- NEIGHBORHOODS -->
     <section id="sec-neighborhoods" class="section">
       <div class="sec-head">
         <h1>📍 Neighborhood Reference</h1>
-        <p class="sub">Areas within roughly 35 minutes of <b id="nbAnchor"></b> at a no-traffic baseline. Click any card for live driving directions from the anchor.</p>
+        <p class="sub">Areas within roughly 35 minutes of <b id="nbAnchor"></b> at a no-traffic baseline. Click any card for directions.</p>
       </div>
       <div id="nbList" class="nb-grid"></div>
     </section>
@@ -258,10 +287,11 @@
     <section id="sec-search" class="section">
       <div class="sec-head">
         <h1>🔎 Quick-Launch Searches</h1>
-        <p class="sub">Pre-filtered searches — Atlanta area, houses under $700k. Each opens in a new tab as a starting point you can refine.</p>
+        <p class="sub">Pre-filtered searches — Atlanta area, houses under $700k. Each opens in a new tab.</p>
       </div>
       <div id="searchList" class="search-grid"></div>
     </section>
+
   </main>
 </div>
 
@@ -276,47 +306,44 @@
         <input id="set_key" type="password" placeholder="AIzaSy..."/>
         <button class="btn outline tiny" type="button" id="toggleKeyBtn">👁</button>
       </div>
-      <div class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> — sign in with Google, click "Create API key". No credit card needed. Stored only in this browser's localStorage.</div>
+      <div class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> — sign in with Google, click "Create API key". Stored only in this browser's localStorage.</div>
     </div>
     <div class="field">
       <label>Model</label>
       <input id="set_model" placeholder="gemini-2.5-flash"/>
-      <div class="hint">Default: <b>gemini-2.5-flash</b>. If you get a quota error, try <b>gemini-2.0-flash-lite</b> or <b>gemini-1.5-flash-8b</b>.</div>
+      <div class="hint">Default: <b>gemini-2.5-flash</b>. If you hit quota errors try <b>gemini-2.0-flash-lite</b> or <b>gemini-1.5-flash-8b</b>.</div>
     </div>
     <div class="field">
       <label>Anchor Address</label>
       <input id="set_anchor"/>
-      <div class="hint">Origin point for neighborhood driving-distance directions.</div>
+      <div class="hint">Origin for neighborhood driving directions.</div>
     </div>
     <button class="btn primary full" id="saveSettingsBtn">Save Settings</button>
     <div id="setSaved" class="saved-msg" style="display:none">✓ Settings saved</div>
   </div>
 </aside>
 
-<!-- Add/Edit modal -->
+<!-- Edit modal -->
 <div id="modalOverlay" class="overlay">
   <div class="modal">
-    <div class="drawer-head"><h2 id="modalTitle">Add a Home</h2><button class="x" id="modalCloseBtn">✕</button></div>
+    <div class="drawer-head"><h2 id="modalTitle">Edit Home</h2><button class="x" id="modalCloseBtn">✕</button></div>
     <div class="modal-body">
       <div class="field"><label>Address</label><input id="md_address" placeholder="123 Creek View Dr, Marietta, GA"/></div>
       <div class="row2">
-        <div class="field"><label>Price</label><input id="md_price" placeholder="$675,000"/></div>
-        <div class="field"><label>Listing URL</label><input id="md_url" placeholder="https://www.zillow.com/..."/></div>
+        <div class="field"><label>Price</label><input id="md_price" placeholder="625000"/></div>
+        <div class="field"><label>Listing URL</label><input id="md_url" placeholder="https://..."/></div>
       </div>
-      <div class="field"><label>Notes</label><input id="md_notes" placeholder="Anything worth remembering"/></div>
-      <div class="field">
-        <label>Listing description <span class="opt">(optional — needed for AI analysis)</span></label>
-        <textarea id="md_desc" rows="4" placeholder="Paste the listing description for X-factor analysis..."></textarea>
+      <div class="row3">
+        <div class="field"><label>Beds</label><input id="md_beds" type="number" min="0" placeholder="4"/></div>
+        <div class="field"><label>Baths</label><input id="md_baths" type="number" min="0" step="0.5" placeholder="2.5"/></div>
+        <div class="field"><label>Sq ft</label><input id="md_sqft" type="number" min="0" placeholder="2800"/></div>
       </div>
-      <div class="field">
-        <label>Image URLs <span class="opt">(optional — one per line, for AI analysis)</span></label>
-        <textarea id="md_images" rows="2" placeholder="https://photos.zillowstatic.com/...jpg"></textarea>
-      </div>
+      <div class="field"><label>Notes <span class="opt">(optional)</span></label>
+        <input id="md_notes" placeholder="Anything worth remembering"/></div>
     </div>
     <div class="modal-foot">
       <button class="btn ghost" id="modalCancelBtn">Cancel</button>
-      <button class="btn outline" id="modalSaveBtn">Save</button>
-      <button class="btn primary" id="modalSaveAnalyzeBtn">Save &amp; Analyze</button>
+      <button class="btn primary" id="modalSaveBtn">Save</button>
     </div>
   </div>
 </div>
